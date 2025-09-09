@@ -21,6 +21,7 @@ class Product(Base):
     price = Column(Float)
     description = Column(String, nullable=True)
     stock = Column(Integer)
+    cart_quantity = Column(Integer, default=0)
 
 async def get_db():
     async with AsyncSessionLocal() as session:
