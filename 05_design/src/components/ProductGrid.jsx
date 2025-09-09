@@ -1,7 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-export default function ProductGrid({ products, onView, onEdit, onDelete }) {
+export default function ProductGrid({ products, onView, onEdit, onDelete, onAddToCart }) {
   return (
     <div
       className="flex flex-wrap gap-[32px] w-full justify-start"
@@ -14,6 +14,7 @@ export default function ProductGrid({ products, onView, onEdit, onDelete }) {
           onView={() => onView(product.id)}
           onEdit={() => onEdit(product.id)}
           onDelete={() => onDelete(product.id)}
+          onAddToCart={() => onAddToCart(product.id)}
         />
       ))}
     </div>

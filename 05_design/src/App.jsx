@@ -4,10 +4,12 @@ import ProductDialog from './components/ProductDialog';
 import ProductFormDialog from './components/ProductFormDialog';
 import DeleteDialog from './components/DeleteDialog';
 import SearchBar from './components/SearchBar';
-import { getProducts, getProductById, createProduct, updateProduct, deleteProduct } from './api/products';
+import { getProducts, getProductById, createProduct, updateProduct, deleteProduct, addToCart, getCart, removeFromCart } from './api/products';
+import CartList from './components/CartList';
 
 export default function App() {
   const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
@@ -18,7 +20,14 @@ export default function App() {
 
   useEffect(() => {
     getProducts().then(setProducts);
+    getCart().then(setCart);
   }, [refresh]);
+
+  const handleAddToCart = async (productId) => {
+    await addToCart(productId);
+    getProducts().then(setProducts);
+    getCart().then(setCart);
+  };
 
   useEffect(() => {
     // Update modal state whenever any modal opens/closes
@@ -78,6 +87,15 @@ export default function App() {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Remove from cart handler
+  const handleRemoveFromCart = async (productId, amount) => {
+    for (let i = 0; i < amount; i++) {
+      await removeFromCart(productId);
+    }
+    getProducts().then(setProducts);
+    getCart().then(setCart);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FB] relative">
       <div className={`flex flex-col items-center py-8 px-4 landscape:flex-row landscape:justify-center landscape:items-start ${isModalOpen ? 'pointer-events-none' : ''}`}>
@@ -95,12 +113,23 @@ export default function App() {
               Add Product
             </button>
           </div>
-          <ProductGrid
-            products={filteredProducts}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          <div className="flex flex-col w-full items-center">
+            <ProductGrid
+              products={filteredProducts}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onAddToCart={handleAddToCart}
+            />
+            {/* Cart List on the left side, styled to fit design */}
+            <div className="w-full flex flex-row mt-12">
+              <div className="flex-shrink-0" style={{ minWidth: '320px', maxWidth: '340px' }}>
+                <CartList cart={cart} onRemoveFromCart={handleRemoveFromCart} />
+              </div>
+              <div className="flex-1" />
+            </div>
+          </div>
+ 
         </div>
       </div>
 

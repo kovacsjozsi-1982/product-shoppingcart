@@ -34,6 +34,7 @@ class ProductDTO(BaseModel):
     price: float
     description: str | None = None
     stock: int
+    cart_quantity: int
 
     class Config:
         from_attributes = True
@@ -43,12 +44,14 @@ class ProductCreateDTO(BaseModel):
     price: float
     description: str | None = None
     stock: int
+    cart_quantity: int = 0
 
 class ProductUpdateDTO(BaseModel):
     name: str | None = None
     price: float | None = None
     description: str | None = None
     stock: int | None = None
+    cart_quantity: int | None = None
 
 
 
@@ -104,6 +107,39 @@ async def update_product(product_id: int, product: ProductUpdateDTO, db: AsyncSe
     await db.commit()
     await db.refresh(db_product)
     return db_product
+
+ # Shopping Cart Endpoints
+@app.post("/cart/add/{product_id}", response_model=ProductDTO)
+async def add_to_cart(product_id: int, db: AsyncSession = Depends(get_db)):
+    db_product = await db.get(Product, product_id)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if db_product.stock <= 0:
+        raise HTTPException(status_code=400, detail="Product out of stock")
+    db_product.stock -= 1
+    db_product.cart_quantity += 1
+    await db.commit()
+    await db.refresh(db_product)
+    return db_product
+
+@app.post("/cart/remove/{product_id}", response_model=ProductDTO)
+async def remove_from_cart(product_id: int, db: AsyncSession = Depends(get_db)):
+    db_product = await db.get(Product, product_id)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if db_product.cart_quantity <= 0:
+        raise HTTPException(status_code=400, detail="Product not in cart")
+    db_product.stock += 1
+    db_product.cart_quantity -= 1
+    await db.commit()
+    await db.refresh(db_product)
+    return db_product
+
+@app.get("/cart/", response_model=List[ProductDTO])
+async def get_cart(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product).filter(Product.cart_quantity > 0))
+    products = result.scalars().all()
+    return products
 
 # DELETE /products
 @app.delete("/products/{product_id}", status_code=200)

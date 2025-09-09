@@ -1,6 +1,21 @@
 import axios from 'axios';
 
 const API_URL = 'http://127.0.0.1:8000/products';
+const CART_URL = 'http://127.0.0.1:8000/cart';
+export const addToCart = async (productId) => {
+  const res = await axios.post(`${CART_URL}/add/${productId}`);
+  return res.data;
+};
+
+export const removeFromCart = async (productId) => {
+  const res = await axios.post(`${CART_URL}/remove/${productId}`);
+  return res.data;
+};
+
+export const getCart = async () => {
+  const res = await axios.get(`${CART_URL}/`);
+  return res.data;
+};
 
 export const getProducts = async () => {
   const res = await axios.get(API_URL);
